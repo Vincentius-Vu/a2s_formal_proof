@@ -1,0 +1,6 @@
+name = "AS2Verification"
+version = "0.1.0"
+defaultTargets = ["AS2Verification"]
+
+[[lean_lib]]
+name = "AS2Verification"
