@@ -73,7 +73,7 @@ theorem S_jerk_boundary_zero : S_jerk 0 = 0 := by
   Jerk at end boundary τ = 1 vanishes identically.
   Guarantees continuous jerk across the blend boundary (zero jerk step).
 -/
-theorem S_jerk_boundary_one : S_jerk 0 = 0 := by
+theorem S_jerk_boundary_one : S_jerk 1 = 0 := by
   rfl
 
 -- ===================================================================

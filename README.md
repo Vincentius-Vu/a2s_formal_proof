@@ -1,57 +1,30 @@
-# Formal Verification of $AS^2$-Curve Foundation in Lean 4
+# Lean 4 Arithmetic Checks for $AS^2$-Curve Foundation
 
-This directory contains the machine-checked mathematical proofs for the proposed **$AS^2$-Curve (Asymmetric Sigmoid S-Curve)** trajectory planning framework.
+This repository contains **Lean 4 (v4.36.0)** integer and natural-number arithmetic checks supporting the **$AS^2$-Curve** manuscript.
 
-All theorems and lemmas are formalized and formally verified using the **Lean 4 Interactive Theorem Prover** (Toolchain: `leanprover/lean4:v4.36.0`).
+**Scope Note:** These Lean 4 modules verify boundary evaluations of the septic polynomial and its prescribed derivative expressions over `Int`, as well as natural-number monotonicity and division-bound admissibility of the scaled contour-error product over `Nat`. Full real-analysis (`ℝ` / `HasDerivAt`) and Euclidean vector-space proofs are outside the scope of this Lean package.
 
----
+## Modules and Theorems
 
-## Formalized Modules and Theorems
+### 1. `AS2Verification.Smoothness` (Integer Boundary Checks)
+- `AS2.S_boundary_zero`, `AS2.S_boundary_one`: $S(0) = 0$, $S(1) = 1$ (`rfl`, no axioms)
+- `AS2.S_vel_boundary_zero`, `AS2.S_vel_boundary_one`: $S_{\mathrm{vel}}(0) = 0$, $S_{\mathrm{vel}}(1) = 0$ (`rfl`, no axioms)
+- `AS2.S_acc_boundary_zero`, `AS2.S_acc_boundary_one`: $S_{\mathrm{acc}}(0) = 0$, $S_{\mathrm{acc}}(1) = 0$ (`rfl`, no axioms)
+- `AS2.S_jerk_boundary_zero`, `AS2.S_jerk_boundary_one`: $S_{\mathrm{jerk}}(0) = 0$, $S_{\mathrm{jerk}}(1) = 0$ (`rfl`, no axioms)
+- `AS2.S_snap_at_zero`, `AS2.S_snap_at_one`: $S_{\mathrm{snap}}(0) = 840$, $S_{\mathrm{snap}}(1) = -840$ (`rfl`, no axioms)
+- `AS2.S_midpoint_is_half`: $S_{\mathrm{scaled}}(1) = 64$ (`rfl`, no axioms)
 
-### 1. `AS2Verification.Smoothness` ($C^3$ Continuity & Bounded Snap)
-* **Theorem 1 (Exact Boundary Vanishing Conditions):**
-  - Position: $S(0) = 0$, $S(1) = 1$
-  - Velocity: $S'(0) = 0$, $S'(1) = 0$
-  - Acceleration: $S''(0) = 0$, $S''(1) = 0$
-  - Jerk: $S'''(0) = 0$, $S'''(1) = 0$ (Guarantees $C^3$ boundary vanishing jerk, eliminating Dirac delta impulses in snap)
-* **Theorem 2 (Finite and Strictly Bounded Snap at Boundaries):**
-  - Finite snap: $S''''(0) = 840$, $S''''(1) = -840$ (No Dirac delta impulses in motor drive voltage / current derivatives)
+### 2. `AS2Verification.ContourBound` (Scaled Natural-Number Arithmetic Checks)
+- `AS2.straight_line_zero_contour_error`: `contourErrorScaled v T 0 = 0` (`[propext]`)
+- `AS2.zero_blend_time_zero_error`: `contourErrorScaled v 0 sin_th = 0` (`[propext]`)
+- `AS2.contour_error_monotonic_time`: $T_1 \le T_2 \implies \text{contourErrorScaled}(v, T_1, s) \le \text{contourErrorScaled}(v, T_2, s)$ (no axioms)
+- `AS2.blend_time_guarantees_admissibility`: $\text{contourErrorScaled}(v, T, s) \le 4 \varepsilon \implies \text{contourErrorScaled}(v, T, s) / 4 \le \varepsilon$ (`[propext]`)
 
-### 2. `AS2Verification.ContourBound` (Corner Blending Contour Error Bound)
-* **Theorem 1.1 (Straight-Line Zero Contour Error):**
-  - When $\theta = 0$, geometric contour error $\delta \equiv 0$.
-* **Theorem 1.2 (Zero-Duration Boundary):**
-  - When $T_{\text{blend}} = 0$ (stop-and-go mode), $\delta \equiv 0$.
-* **Theorem 1.3 (Monotonicity w.r.t Blend Time):**
-  - $T_1 \le T_2 \implies \delta(T_1) \le \delta(T_2)$.
-* **Theorem 1.4 (Tolerance Admissibility Guarantee):**
-  - $V_{\text{corner}} T_{\text{blend}} \sin(\theta) \le 4 \cdot \varepsilon_{\text{allowable}} \implies \text{Contour Deviation} \le \varepsilon_{\text{allowable}}$.
+## How to Verify
 
-### 3. `AS2Verification.TorqueScaling` (Inertial Torque Saturation Invariance)
-* **Theorem 3.1 (Quadratic Dilation Monotonicity):**
-  - $\forall s \ge 1 \implies s^2 \ge s \ge 1$.
-* **Theorem 3.2 (Torque Invariance Property):**
-  - Under quadratic time scaling $a' = a / s^2$, for $s^2 \cdot \tau_{\text{safe}} \ge \tau$, the effective torque is strictly bounded by the actuator threshold: $\tau' \le \tau_{\text{safe}}$.
-* **Corollary 3.3 (Nominal Scaling Recovery):**
-  - When $s = 1$, the bound collapses identically to the nominal torque condition $\tau \le \tau_{\text{safe}}$.
-
----
-
-## How to Verify the Proofs
-
-Ensure [Elan](https://github.com/leanprover/elan) and Lean 4 are installed, then execute:
+From the repository root (with Lean `v4.36.0` via [Elan](https://github.com/leanprover/elan)):
 
 ```bash
-cd formal_proofs/AS2Verification
 lake build
-```
-
-Expected output:
-```text
-✔ [2/12] Built AS2Verification.Basic
-✔ [4/12] Built AS2Verification.Smoothness
-✔ [6/12] Built AS2Verification.TorqueScaling
-✔ [8/12] Built AS2Verification.ContourBound
-✔ [10/12] Built AS2Verification
-Build completed successfully (12 jobs).
+lake env lean CheckAxioms.lean
 ```
